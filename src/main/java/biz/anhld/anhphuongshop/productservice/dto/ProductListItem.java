@@ -7,9 +7,9 @@ import lombok.Setter;
 public class ProductListItem {
   private long id;
 
-	private String name;
+  private String name;
 
-	private long price;
+  private Long price;
 
   private int stock;
 

@@ -12,26 +12,27 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "products", schema = "productsvc")
-@Getter @Setter
+@Getter
+@Setter
 public class Product {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "productsvc.products_id_seq")
+    private Long id;
 
-	private String name;
+    private String name;
 
-	private Long price;
+    private Long price;
 
-	private String description;
+    private String description;
 
-  private Integer stock;
+    private Integer stock;
 
-  private String image;
+    private String image;
 
-  private String slug;
+    private String slug;
 
-  @ManyToOne(fetch = jakarta.persistence.FetchType.EAGER, optional = true)
-  private Category category;
+    @ManyToOne(fetch = jakarta.persistence.FetchType.EAGER, optional = true)
+    private Category category;
 
 }

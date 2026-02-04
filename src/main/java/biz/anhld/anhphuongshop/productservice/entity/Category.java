@@ -14,7 +14,7 @@ import jakarta.persistence.GenerationType;
 @Getter @Setter
 public class Category {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.AUTO, generator = "productsvc.categories_id_seq")
   private Long id;
   @NotBlank(message = "Name is mandatory")
   private String name;

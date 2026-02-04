@@ -12,6 +12,10 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ProductMapper extends BaseMapper<Product, ProductDTO> {
 
-  @Mapping(target = "categoryName", source = "category.name")
+  @Mapping(source = "category.name", target = "categoryName")
+    // Nếu bạn muốn xử lý trường hợp category bị null để tránh NullPointerException:
+    // @Mapping(source = "category.name", target = "categoryName", defaultValue = "Uncategorized")
+  ProductListItem toListItem(Product product);
+
   List<ProductListItem> toProductListItems(List<Product> products);
 }
