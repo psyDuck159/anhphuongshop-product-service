@@ -20,15 +20,17 @@
             <password>${env.NEXUS_PASS}</password>
         </server>
     </servers>
+    <!-->
     <mirrors>
         <mirror>
             <id>nexus-public</id>
             <name>Nexus Public Mirror</name>
             <url>https://nexus.anhld.biz/repository/maven-public/</url>
-            <mirrorOf>*</mirrorOf>   <!-- hoặc chỉ "central" nếu muốn giữ một số repo khác -->
+            <mirrorOf>*</mirrorOf>
         </mirror>
     </mirrors>
-    <!--
+    -->
+    
     <profiles>
         <profile>
             <id>nexus-internal</id>
@@ -53,5 +55,4 @@
     <activeProfiles>
         <activeProfile>nexus-internal</activeProfile>
     </activeProfiles> 
-    -->
 </settings>
