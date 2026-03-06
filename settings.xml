@@ -9,6 +9,16 @@
             <username>${env.NEXUS_USER}</username>     <!-- Maven sẽ lấy từ biến môi trường -->
             <password>${env.NEXUS_PASS}</password>
         </server>
+        <server>
+            <id>nexus-releases</id>
+            <username>${env.NEXUS_USER}</username>
+            <password>${env.NEXUS_PASS}</password>
+        </server>
+        <server>
+            <id>nexus-snapshots</id>
+            <username>${env.NEXUS_USER}</username>
+            <password>${env.NEXUS_PASS}</password>
+        </server>
     </servers>
     <profiles>
         <profile>
