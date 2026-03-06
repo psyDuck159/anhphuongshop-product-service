@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+    <!-- === CREDENTIALS CHO NEXUS === -->
+    <servers>
+        <server>
+            <id>nexus-public</id>
+            <username>${env.NEXUS_USER}</username>     <!-- Maven sẽ lấy từ biến môi trường -->
+            <password>${env.NEXUS_PASS}</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>nexus-internal</id>
+            <repositories>
+                <!-- 1. Maven Central trước tiên (mọi dependency công khai sẽ lấy từ đây) -->
+                <repository>
+                    <id>central</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                </repository>
+
+                <!-- 2. Nexus chỉ dùng khi Central không tìm thấy (chỉ common-proto) -->
+                <repository>
+                    <id>nexus-public</id>
+                    <url>https://nexus.anhld.biz/repository/maven-public/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
+    <!-- Kích hoạt profile này luôn -->
+    <activeProfiles>
+        <activeProfile>nexus-internal</activeProfile>
+    </activeProfiles>
+</settings>

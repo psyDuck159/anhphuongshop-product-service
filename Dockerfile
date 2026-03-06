@@ -5,19 +5,26 @@ FROM maven:3.9-eclipse-temurin-25-alpine AS build
 
 WORKDIR /app
 
+ARG NEXUS_USER
+ARG NEXUS_PASS
+
 # Copy Maven wrapper và pom.xml để cache dependencies
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
+COPY settings.xml /root/.m2/settings.xml
+
+ENV NEXUS_USER=${NEXUS_USER}
+ENV NEXUS_PASS=${NEXUS_PASS}
 
 # Download dependencies (sẽ được cache nếu pom.xml không đổi)
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B -s /root/.m2/settings.xml
 
 # Copy source code
 COPY src ./src
 
 # Build application (skip tests để build nhanh hơn)
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B -s /root/.m2/settings.xml
 
 # =====================================
 # Stage 2: Runtime
@@ -29,7 +36,7 @@ WORKDIR /app
 # Tạo user non-root để chạy app (security best practice)
 RUN mkdir -p /config &&\
     addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup \
+    adduser -u 1001 -S appuser -G appgroup && \
     chown -R appuser:appgroup /app /config
 
 # Copy jar file từ build stage
