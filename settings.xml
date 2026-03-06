@@ -28,7 +28,7 @@
             <mirrorOf>*</mirrorOf>   <!-- hoặc chỉ "central" nếu muốn giữ một số repo khác -->
         </mirror>
     </mirrors>
-    <!--- 
+    <!--
     <profiles>
         <profile>
             <id>nexus-internal</id>
@@ -53,5 +53,5 @@
     <activeProfiles>
         <activeProfile>nexus-internal</activeProfile>
     </activeProfiles> 
-    --->
+    -->
 </settings>
