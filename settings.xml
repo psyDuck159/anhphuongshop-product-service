@@ -28,12 +28,11 @@
             <mirrorOf>*</mirrorOf>   <!-- hoặc chỉ "central" nếu muốn giữ một số repo khác -->
         </mirror>
     </mirrors>
-    <!-- 
+    <!--- 
     <profiles>
         <profile>
             <id>nexus-internal</id>
             <repositories>
-                <!-- 1. Maven Central trước tiên (mọi dependency công khai sẽ lấy từ đây) -->
                 <repository>
                     <id>central</id>
                     <url>https://repo.maven.apache.org/maven2</url>
@@ -41,7 +40,6 @@
                     <snapshots><enabled>false</enabled></snapshots>
                 </repository>
 
-                <!-- 2. Nexus chỉ dùng khi Central không tìm thấy (chỉ common-proto) -->
                 <repository>
                     <id>nexus-public</id>
                     <url>https://nexus.anhld.biz/repository/maven-public/</url>
@@ -55,5 +53,5 @@
     <activeProfiles>
         <activeProfile>nexus-internal</activeProfile>
     </activeProfiles> 
-    -->
+    --->
 </settings>
