@@ -13,18 +13,20 @@ COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
 COPY settings.xml /root/.m2/settings.xml
+#RUN echo "192.168.58.123 nexus.anhld.biz" >> /etc/hosts
+#RUN printf '192.168.58.123\tnexus.anhld.biz\n' >> /etc/hosts
 
 ENV NEXUS_USER=${NEXUS_USER}
 ENV NEXUS_PASS=${NEXUS_PASS}
 
 # Download dependencies (sẽ được cache nếu pom.xml không đổi)
-RUN mvn dependency:go-offline -B -s /root/.m2/settings.xml
+RUN --mount=type=cache,target=/root/.m2/repository mvn dependency:go-offline -B -s /root/.m2/settings.xml -T 1C --no-transfer-progress
 
 # Copy source code
 COPY src ./src
 
 # Build application (skip tests để build nhanh hơn)
-RUN mvn clean package -DskipTests -B -s /root/.m2/settings.xml
+RUN --mount=type=cache,target=/root/.m2/repository mvn clean package -DskipTests -B -s /root/.m2/settings.xml -T 1C --no-transfer-progress
 
 # =====================================
 # Stage 2: Runtime

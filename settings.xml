@@ -30,23 +30,32 @@
         </mirror>
     </mirrors>
     -->
-    
+    <!-- MIRROR quan trọng nhất: Tất cả đi thẳng Maven Central, CHỈ trừ nexus-public -->
+    <mirrors>
+        <mirror>
+            <id>central-direct</id>
+            <name>Maven Central Direct (không qua Nexus)</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <mirrorOf>*,!nexus-public</mirrorOf>
+        </mirror>
+    </mirrors>
+
     <profiles>
         <profile>
             <id>nexus-internal</id>
             <repositories>
-                <repository>
-                    <id>central</id>
-                    <url>https://repo.maven.apache.org/maven2</url>
-                    <releases><enabled>true</enabled></releases>
-                    <snapshots><enabled>false</enabled></snapshots>
-                </repository>
 
                 <repository>
                     <id>nexus-public</id>
                     <url>https://nexus.anhld.biz/repository/maven-public/</url>
-                    <releases><enabled>true</enabled></releases>
-                    <snapshots><enabled>true</enabled></snapshots>
+		    <releases>
+			    <enabled>true</enabled>
+			    <updatePolicy>never</updatePolicy>
+		    </releases>
+		    <snapshots>
+			    <enabled>true</enabled>
+			    <updatePolicy>daily</updatePolicy>    
+		    </snapshots>
                 </repository>
             </repositories>
         </profile>
