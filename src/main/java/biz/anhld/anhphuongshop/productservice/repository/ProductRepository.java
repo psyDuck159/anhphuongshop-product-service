@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import biz.anhld.anhphuongshop.productservice.entity.Product;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.Modifying;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +18,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   Optional<Product> findBySlug(String slug);
 
   List<Product> findByIdIn(List<Long> productIds);
+
+  @Modifying
+  @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.id = :id AND p.stock >= :quantity")
+  int decreaseStock(@Param("id") Long id, @Param("quantity") int quantity);
 
   @Query("SELECT DISTINCT p FROM Product p " +
          "LEFT JOIN FETCH p.category c " +

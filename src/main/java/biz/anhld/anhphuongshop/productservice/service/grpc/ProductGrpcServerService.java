@@ -1,15 +1,13 @@
 package biz.anhld.anhphuongshop.productservice.service.grpc;
 
-import biz.anhld.anhphuongshop.grpc.ProductBatchRequest;
-import biz.anhld.anhphuongshop.grpc.ProductBatchResponse;
-import biz.anhld.anhphuongshop.grpc.ProductGrpcServiceGrpc;
-
-import biz.anhld.anhphuongshop.grpc.ProductResponse;
+import biz.anhld.anhphuongshop.grpc.*;
 import biz.anhld.anhphuongshop.productservice.entity.Product;
 import biz.anhld.anhphuongshop.productservice.repository.ProductRepository;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,6 +46,21 @@ public class ProductGrpcServerService extends ProductGrpcServiceGrpc.ProductGrpc
                 .build();
 
         responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Transactional
+    @Override
+    public void reduceStock(ReduceStockRequest request, StreamObserver<ReduceStockResponse> responseObserver) {
+        for (StockItem item : request.getItemsList()) {
+            int updated = productRepository.decreaseStock(item.getProductId(), item.getQuantity());
+            if (updated == 0) {
+                throw Status.FAILED_PRECONDITION
+                        .withDescription("Insufficient stock for product id: " + item.getProductId())
+                        .asRuntimeException();
+            }
+        }
+        responseObserver.onNext(ReduceStockResponse.newBuilder().setSuccess(true).build());
         responseObserver.onCompleted();
     }
 }
