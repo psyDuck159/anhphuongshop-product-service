@@ -22,6 +22,10 @@ ENV NEXUS_PASS=${NEXUS_PASS}
 # Download dependencies (sẽ được cache nếu pom.xml không đổi)
 RUN --mount=type=cache,target=/root/.m2/repository mvn dependency:go-offline -B -s /root/.m2/settings.xml -T 1C --no-transfer-progress
 
+# Download OpenTelemetry Java Agent
+RUN wget -q https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.26.1/opentelemetry-javaagent.jar \
+    -O /app/opentelemetry-javaagent.jar
+
 # Copy source code
 COPY src ./src
 
@@ -41,8 +45,9 @@ RUN mkdir -p /config &&\
     adduser -u 1001 -S appuser -G appgroup && \
     chown -R appuser:appgroup /app /config
 
-# Copy jar file từ build stage
+# Copy jar file và OTel agent từ build stage
 COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/opentelemetry-javaagent.jar opentelemetry-javaagent.jar
 
 # Chuyển sang user non-root
 USER appuser
@@ -60,4 +65,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 
 # Run application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -javaagent:/app/opentelemetry-javaagent.jar -jar app.jar"]

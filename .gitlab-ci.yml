@@ -1,0 +1,149 @@
+stages:
+  - build
+  - sonar
+  - report
+  - deploy
+
+variables:
+  DOCKER_IMAGE: harbor.anhld.biz/anhphuongshop/product-service:$CI_COMMIT_SHORT_SHA
+  #PROJECT_ID: anhphuongshop_user-service_6ae7d2cc-f65e-46ea-86be-bcb5506b1a24
+  SONAR_HOST_URL: "http://sonarqube.anhld.biz"
+  TELE_BOT_TOKEN: 8209377501:AAFCGr93HXH5WtllM7ix7zCfO81Upefx5wE
+
+#test commit
+
+build:
+  stage: build
+  image: docker:20-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - name: docker:20-dind
+      alias: docker
+      command: ["--tls=false"]
+  script:
+    # - docker info
+    - apk add docker-buildx-plugin
+    - echo "192.168.1.123 vaultdell.anhld.biz" >> /etc/hosts
+    - echo "192.168.1.123 nexus.anhld.biz" >> /etc/hosts
+    - ip a
+    - chmod +x mvnw  # Ensure executable
+    - DOCKER_BUILDKIT=1 docker build --build-arg NEXUS_USER="$NEXUS_USER" --build-arg NEXUS_PASS="$NEXUS_PASS" --add-host nexus.anhld.biz:192.168.1.123 -t $DOCKER_IMAGE .
+    # - apk add --no-cache curl jq
+
+    - echo "$HARBOR_PW" | docker login -u "$HARBOR_USER" --password-stdin "$HARBOR_URL"
+    - docker push $DOCKER_IMAGE
+  tags:
+    - shared-runner-2
+#sonarqube-check:
+#  stage: sonar
+#  image: maven:3.9.9-eclipse-temurin-17
+#  variables:
+#    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+#    GIT_DEPTH: "0"
+#    SONAR_TOKEN: "sqp_13b02f0e641f4198fdce787fedc51ca515f1ad1c"
+#  before_script:
+#    - echo "192.168.58.127 sonarqube.anhld.biz" >> /etc/hosts
+#    - apt-get update && apt-get install -y wget unzip
+#    - wget --tries=3 https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip
+#    - unzip sonar-scanner-cli-7.1.0.4889-linux-x64.zip
+#    - mv sonar-scanner-7.1.0.4889-linux-x64 /opt/sonar-scanner
+#    - export PATH=$PATH:/opt/sonar-scanner/bin
+#  script:
+#    - mvn clean compile
+#    - sonar-scanner -Dsonar.java.binaries="./target/classes" -Dsonar.sources="./src/" -Dsonar.projectKey="$PROJECT_ID" -Dsonar.projectName="$CI_PROJECT_NAME" -Dsonar.projectVersion="${CI_COMMIT_SHORT_SHA}"
+#  allow_failure: true
+#  cache:
+#    key: "${CI_JOB_NAME}"
+#    paths:
+#      - .sonar/cache
+#      - ~/.m2/repository
+#  tags:
+#    - shared-runner-2
+#sonarqube-report:
+#  stage: report
+#  image: node:20
+#  before_script:
+#    - echo "192.168.58.127 sonarqube.anhld.biz" >> /etc/hosts
+#    - apt-get update && apt-get install -y chromium
+#    - npm install puppeteer
+#  script:
+#    - |
+#      cat > screenshot.js <<'EOF'
+#      const puppeteer = require('puppeteer');
+#
+#      (async () => {
+#        const projectId = process.env.PROJECT_ID;
+#        const commitShortSha = process.env.CI_COMMIT_SHORT_SHA;
+#
+#        const browser = await puppeteer.launch({
+#          headless: true,
+#          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+#          executablePath: '/usr/bin/chromium'
+#        });
+#
+#        const page = await browser.newPage();
+#        await page.setViewport({ width: 1920, height: 1080 });
+#
+#        await page.goto(`http://sonarqube.anhld.biz/sessions/new?return_to=%2F`, { waitUntil: 'networkidle2' });
+#
+#        await page.waitForSelector('#login-input', { timeout: 20000 });
+#        await page.type('#login-input', 'admin ');
+#
+#        await page.waitForSelector('#password-input', { timeout: 20000 });
+#        await page.type('#password-input', 'Admin@123456');
+#
+#        await Promise.all([
+#          page.click('button[type="submit"]'),
+#          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
+#        ]);
+#
+#        const issuesUrl = `${process.env.SONAR_HOST_URL}/project/issues?id=${projectId}&issueStatuses=OPEN%2CCONFIRMED&types=VULNERABILITY`;
+#        await page.goto(issuesUrl, { waitUntil: 'networkidle2' });
+#
+#        await page.screenshot({ path: 'sonar-report.png', fullPage: true });
+#
+#        await browser.close();
+#      })();
+#      EOF
+#
+#    - node screenshot.js
+#
+#    - |
+#      curl -s -X POST https://api.telegram.org/bot$TELE_BOT_TOKEN/sendPhoto
+#        -F chat_id=-4972193020
+#        -F photo=@sonar-report.png
+#        -F caption="SonarQube Report for *${CI_PROJECT_NAME}* (${CI_COMMIT_SHORT_SHA})"
+#        -F parse_mode=Markdown
+#  tags:
+#    - shared-runner-2
+deploy:
+ stage: deploy
+ image: bitnamisecure/kubectl:latest
+ variables:
+   SECRET_NAME: "anhphuongshop-product-service-secrets"
+   NAMESPACE: "anhphuongshop"
+#    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+#    GIT_DEPTH: "0"
+#    SONAR_TOKEN: "sqp_13b02f0e641f4198fdce787fedc51ca515f1ad1c"
+ script:
+    - echo "192.168.1.123 nexus.anhld.biz" >> /etc/hosts
+    - apt-get update -qq && apt-get install -y curl jq
+    - |
+      cat <<EOF > /tmp/secret.yaml
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: $SECRET_NAME
+        namespace: $NAMESPACE
+      type: Opaque
+      data:
+      $(curl --header "X-Vault-Token: ${VAULT_ID_TOKEN}" --request GET https://vaultdell.anhld.biz/v1/kv/data/anhphuongshop/product-service | jq -r '.data.data | to_entries[] | "  \(.key): \(.value | @base64) "')
+      EOF
+
+    - kubectl apply -f /tmp/secret.yaml
+    - kubectl set image deployment/anhphuongshop-product-service-deployment anhphuongshop-product-service=$DOCKER_IMAGE -n anhphuongshop
+ tags:
+    - shared-runner-2
