@@ -17,6 +17,9 @@ import biz.anhld.anhphuongshop.productservice.dto.ProductListItem;
 import biz.anhld.anhphuongshop.productservice.dto.BasePageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -47,5 +50,21 @@ public class ProductController {
   @GetMapping("/{slug}")
   public ResponseEntity<ProductDTO> getProductBySlug(@PathVariable String slug) {
     return ResponseEntity.ok(productService.getProductBySlug(slug));
+  }
+
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @PutMapping("/{id}")
+  public ResponseEntity<ProductDTO> updateProduct(
+      @PathVariable Long id,
+      @Valid @RequestBody ProductDTO productDTO
+  ) throws Exception {
+    return ResponseEntity.ok(productService.updateProduct(id, productDTO));
+  }
+
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteProduct(@PathVariable Long id) throws Exception {
+    productService.softDelete(id);
+    return ResponseEntity.noContent().build();
   }
 }

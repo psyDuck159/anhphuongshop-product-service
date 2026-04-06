@@ -69,4 +69,33 @@ public class ProductService {
       .orElseThrow(() -> new BadRequestException("Product not found with slug: " + slug));
     return productMapper.toDto(product);
   }
+
+  @org.springframework.transaction.annotation.Transactional
+  public ProductDTO updateProduct(Long id, ProductDTO dto) throws BadRequestException {
+    Product product = productRepository.findActiveById(id)
+      .orElseThrow(() -> new BadRequestException("Product not found: " + id));
+
+    product.setName(dto.getName());
+    product.setPrice(dto.getPrice());
+    product.setDescription(dto.getDescription());
+    product.setStock(dto.getStock());
+    product.setImage(dto.getImage());
+    product.setSlug(dto.getSlug());
+
+    if (dto.getCategory() != null && dto.getCategory().getId() != 0) {
+      Category category = categoryRepository.findById(dto.getCategory().getId())
+        .orElseThrow(() -> new BadRequestException("Invalid category ID"));
+      product.setCategory(category);
+    }
+
+    productRepository.save(product);
+    return productMapper.toDto(product);
+  }
+
+  @org.springframework.transaction.annotation.Transactional
+  public void softDelete(Long id) throws BadRequestException {
+    productRepository.findActiveById(id)
+      .orElseThrow(() -> new BadRequestException("Product not found: " + id));
+    productRepository.softDelete(id);
+  }
 }

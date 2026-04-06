@@ -32,6 +32,8 @@ public class Product {
 
     private String slug;
 
+    private Boolean deleted = false;
+
     @ManyToOne(fetch = jakarta.persistence.FetchType.EAGER, optional = true)
     private Category category;
 

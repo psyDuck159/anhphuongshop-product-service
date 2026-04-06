@@ -15,7 +15,15 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-  Optional<Product> findBySlug(String slug);
+  @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.slug = :slug AND (p.deleted IS NULL OR p.deleted = false)")
+  Optional<Product> findBySlug(@Param("slug") String slug);
+
+  @Query("SELECT p FROM Product p WHERE p.id = :id AND (p.deleted IS NULL OR p.deleted = false)")
+  Optional<Product> findActiveById(@Param("id") Long id);
+
+  @Modifying
+  @Query("UPDATE Product p SET p.deleted = true WHERE p.id = :id")
+  void softDelete(@Param("id") Long id);
 
   List<Product> findByIdIn(List<Long> productIds);
 
@@ -23,13 +31,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.id = :id AND p.stock >= :quantity")
   int decreaseStock(@Param("id") Long id, @Param("quantity") int quantity);
 
+  @Modifying
+  @Query("UPDATE Product p SET p.stock = p.stock + :quantity WHERE p.id = :id")
+  int increaseStock(@Param("id") Long id, @Param("quantity") int quantity);
+
   @Query("SELECT DISTINCT p FROM Product p " +
          "LEFT JOIN FETCH p.category c " +
          "WHERE (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR :search IS NULL OR :search = '') " +
-         "AND (:categoryId IS NULL OR c.id = :categoryId)")
+         "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+         "AND (p.deleted IS NULL OR p.deleted = false)")
   Page<Product> searchProducts(
-    @Param("search") String search, 
-    @Param("categoryId") Long categoryId, 
+    @Param("search") String search,
+    @Param("categoryId") Long categoryId,
     Pageable pageable
   );
 }
