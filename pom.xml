@@ -56,7 +56,7 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
-			<version>1.18.24</version>
+			<version>1.18.42</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -157,10 +157,20 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+					<compilerArgs>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</compilerArg>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</compilerArg>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</compilerArg>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</compilerArg>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</compilerArg>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</compilerArg>
+						<compilerArg>-J--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</compilerArg>
+					</compilerArgs>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>1.18.42</version>
 						</path>
 						<path>
 							<groupId>org.projectlombok</groupId>

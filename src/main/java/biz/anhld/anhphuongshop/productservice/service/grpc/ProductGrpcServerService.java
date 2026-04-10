@@ -2,8 +2,8 @@ package biz.anhld.anhphuongshop.productservice.service.grpc;
 
 import biz.anhld.anhphuongshop.grpc.*;
 import biz.anhld.anhphuongshop.productservice.entity.Product;
+import biz.anhld.anhphuongshop.productservice.exception.BadRequestException;
 import biz.anhld.anhphuongshop.productservice.repository.ProductRepository;
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -23,6 +23,12 @@ public class ProductGrpcServerService extends ProductGrpcServiceGrpc.ProductGrpc
             ProductBatchRequest request,
             StreamObserver<ProductBatchResponse> responseObserver
     ) {
+        if (request.getProductIdsList().isEmpty()) {
+            responseObserver.onNext(ProductBatchResponse.newBuilder().build());
+            responseObserver.onCompleted();
+            return;
+        }
+
         // 1. Lấy danh sách ID từ request
         List<Long> ids = request.getProductIdsList();
         List<Product> products = productRepository.findByIdIn(ids);
@@ -55,9 +61,7 @@ public class ProductGrpcServerService extends ProductGrpcServiceGrpc.ProductGrpc
         for (StockItem item : request.getItemsList()) {
             int updated = productRepository.decreaseStock(item.getProductId(), item.getQuantity());
             if (updated == 0) {
-                throw Status.FAILED_PRECONDITION
-                        .withDescription("Insufficient stock for product id: " + item.getProductId())
-                        .asRuntimeException();
+                throw new BadRequestException("Insufficient stock for product id: " + item.getProductId());
             }
         }
         responseObserver.onNext(ReduceStockResponse.newBuilder().setSuccess(true).build());

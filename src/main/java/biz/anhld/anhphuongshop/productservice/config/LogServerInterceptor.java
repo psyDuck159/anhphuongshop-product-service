@@ -15,14 +15,18 @@ public class LogServerInterceptor implements ServerInterceptor {
             Metadata headers,
             ServerCallHandler<ReqT, RespT> next) {
 
-        // 1. Log tên phương thức được gọi
-        logger.info("Service: {}, Method: {}",
-                call.getMethodDescriptor().getServiceName(),
-                call.getMethodDescriptor().getFullMethodName());
+        logger.info("gRPC call: {}", call.getMethodDescriptor().getFullMethodName());
 
-        // 2. Log Header (nếu cần xem Token truyền lên)
-        logger.info("Headers received: {}", headers.toString());
-
-        return next.startCall(call, headers);
+        return next.startCall(new ForwardingServerCall.SimpleForwardingServerCall<>(call) {
+            @Override
+            public void close(Status status, Metadata trailers) {
+                if (!status.isOk()) {
+                    logger.warn("gRPC call {} failed: {} - {}",
+                            call.getMethodDescriptor().getFullMethodName(),
+                            status.getCode(), status.getDescription());
+                }
+                super.close(status, trailers);
+            }
+        }, headers);
     }
 }
