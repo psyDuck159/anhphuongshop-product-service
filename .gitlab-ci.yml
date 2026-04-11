@@ -25,7 +25,8 @@ build:
       command: ["--tls=false"]
   script:
     # - docker info
-    - apk add docker-buildx-plugin
+    # - apk add docker-buildx-plugin
+    - apk add docker-cli-buildx
     - echo "192.168.1.123 vaultdell.anhld.biz" >> /etc/hosts
     - echo "192.168.1.123 nexus.anhld.biz" >> /etc/hosts
     - ip a
