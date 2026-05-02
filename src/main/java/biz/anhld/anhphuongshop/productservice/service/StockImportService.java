@@ -3,11 +3,13 @@ package biz.anhld.anhphuongshop.productservice.service;
 import biz.anhld.anhphuongshop.productservice.dto.BasePageResponse;
 import biz.anhld.anhphuongshop.productservice.dto.StockImportDTO;
 import biz.anhld.anhphuongshop.productservice.dto.StockImportRequest;
+import biz.anhld.anhphuongshop.productservice.entity.Inventory;
 import biz.anhld.anhphuongshop.productservice.entity.Product;
 import biz.anhld.anhphuongshop.productservice.entity.StockImport;
 import biz.anhld.anhphuongshop.productservice.entity.StockImportItem;
 import biz.anhld.anhphuongshop.productservice.exception.BadRequestException;
 import biz.anhld.anhphuongshop.productservice.mapper.StockImportMapper;
+import biz.anhld.anhphuongshop.productservice.repository.InventoryRepository;
 import biz.anhld.anhphuongshop.productservice.repository.ProductRepository;
 import biz.anhld.anhphuongshop.productservice.repository.StockImportRepository;
 import org.springframework.data.domain.Page;
@@ -24,15 +26,18 @@ public class StockImportService {
 
     private final StockImportRepository stockImportRepository;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
     private final StockImportMapper stockImportMapper;
 
     public StockImportService(
         StockImportRepository stockImportRepository,
         ProductRepository productRepository,
+        InventoryRepository inventoryRepository,
         StockImportMapper stockImportMapper
     ) {
         this.stockImportRepository = stockImportRepository;
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
         this.stockImportMapper = stockImportMapper;
     }
 
@@ -44,6 +49,7 @@ public class StockImportService {
         stockImport.setCreatedBy(createdBy);
 
         List<StockImportItem> items = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
         for (var itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
                 .orElseThrow(() -> new BadRequestException("Product not found: " + itemRequest.getProductId()));
@@ -55,7 +61,12 @@ public class StockImportService {
             item.setCostPrice(itemRequest.getCostPrice());
             items.add(item);
 
-            productRepository.increaseStock(product.getId(), itemRequest.getQuantity());
+            Inventory inventory = inventoryRepository.findByProductIdWithLock(product.getId())
+                .orElseThrow(() -> new BadRequestException("Inventory not found for product: " + product.getId()));
+            inventory.setQuantityTotal(inventory.getQuantityTotal() + itemRequest.getQuantity());
+            inventory.setQuantityAvailable(inventory.getQuantityAvailable() + itemRequest.getQuantity());
+            inventory.setUpdatedAt(now);
+            inventoryRepository.save(inventory);
         }
 
         stockImport.setItems(items);

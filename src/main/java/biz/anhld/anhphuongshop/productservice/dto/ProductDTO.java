@@ -18,9 +18,6 @@ public class ProductDTO {
 
 	private String description;
 
-  @Min(value = 0, message = "Stock must be non-negative")
-  private int stock;
-
   private String image;
 
   @NotBlank(message = "Slug is mandatory")

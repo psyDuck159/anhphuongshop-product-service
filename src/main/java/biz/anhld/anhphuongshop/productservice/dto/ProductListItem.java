@@ -11,8 +11,6 @@ public class ProductListItem {
 
   private Long price;
 
-  private int stock;
-
   private String image;
 
   private String slug;

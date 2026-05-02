@@ -27,14 +27,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
   List<Product> findByIdIn(List<Long> productIds);
 
-  @Modifying
-  @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.id = :id AND p.stock >= :quantity")
-  int decreaseStock(@Param("id") Long id, @Param("quantity") int quantity);
-
-  @Modifying
-  @Query("UPDATE Product p SET p.stock = p.stock + :quantity WHERE p.id = :id")
-  int increaseStock(@Param("id") Long id, @Param("quantity") int quantity);
-
   @Query("SELECT DISTINCT p FROM Product p " +
          "LEFT JOIN FETCH p.category c " +
          "WHERE (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR :search IS NULL OR :search = '') " +
